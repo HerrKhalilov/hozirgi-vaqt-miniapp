@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <title>Vaqt / Soat</title>
+
+  <!-- Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(160deg, #0f172a, #020617);
+      color: white;
+      text-align: center;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .clock {
+      font-size: 42px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    .date {
+      margin-top: 10px;
+      font-size: 16px;
+      opacity: 0.85;
+    }
+
+    .season {
+      margin-top: 5px;
+      font-size: 18px;
+    }
+
+    .divider {
+      margin: 30px 0;
+      height: 1px;
+      background: rgba(255,255,255,0.2);
+    }
+
+    .stopwatch {
+      font-size: 36px;
+      margin-bottom: 15px;
+    }
+
+    .buttons button {
+      margin: 5px;
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .start { background: #22c55e; }
+    .pause { background: #eab308; }
+    .reset { background: #ef4444; }
+
+    button:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>⏰ Vaqt / Soat</h1>
+
+  <!-- LIVE CLOCK -->
+  <div class="clock" id="clock">00:00:00</div>
+  <div class="date" id="date"></div>
+  <div class="season" id="season"></div>
+
+  <div class="divider"></div>
+
+  <!-- STOPWATCH -->
+  <h2>⏱ Sekundomer</h2>
+  <div class="stopwatch" id="stopwatch">0.000</div>
+
+  <div class="buttons">
+    <button class="start" onclick="startStopwatch()">▶ Start</button>
+    <button class="pause" onclick="pauseStopwatch()">⏸ Pause</button>
+    <button class="reset" onclick="resetStopwatch()">🔁 Reset</button>
+  </div>
+</div>
+
+<script>
+  Telegram.WebApp.ready();
+
+  /* ===== LIVE TIME ===== */
+  function getSeason(month) {
+    if ([11,0,1].includes(month)) return "❄️ Qish";
+    if ([2,3,4].includes(month)) return "🌸 Bahor";
+    if ([5,6,7].includes(month)) return "☀️ Yoz";
+    return "🍁 Kuz";
+  }
+
+  function updateClock() {
+    const now = new Date();
+
+    document.getElementById("clock").innerHTML =
+      now.toLocaleTimeString("uz-UZ");
+
+    document.getElementById("date").innerHTML =
+      `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+
+    document.getElementById("season").innerHTML =
+      getSeason(now.getMonth());
+  }
+
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  /* ===== STOPWATCH ===== */
+  let startTime = 0;
+  let elapsed = 0;
+  let running = false;
+  let timerId;
+
+  function updateStopwatch() {
+    if (!running) return;
+
+    const now = performance.now();
+    elapsed += now - startTime;
+    startTime = now;
+
+    const sec = Math.floor(elapsed / 1000);
+    const ms = Math.floor(elapsed % 1000);
+
+    document.getElementById("stopwatch").innerHTML =
+      `${sec}.${ms.toString().padStart(3, "0")}`;
+
+    timerId = requestAnimationFrame(updateStopwatch);
+  }
+
+  function startStopwatch() {
+    if (running) return;
+    running = true;
+    startTime = performance.now();
+    updateStopwatch();
+  }
+
+  function pauseStopwatch() {
+    running = false;
+    cancelAnimationFrame(timerId);
+  }
+
+  function resetStopwatch() {
+    running = false;
+    cancelAnimationFrame(timerId);
+    elapsed = 0;
+    document.getElementById("stopwatch").innerHTML = "0.000";
+  }
+</script>
+
+</body>
+</html>
